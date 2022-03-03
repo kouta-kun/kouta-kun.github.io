@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Roguelike - Part 1 | kouta&#39;s blog</title>
+<meta name="keywords" content="" />
+<meta name="description" content="How my map generation is going so far.">
+<meta name="author" content="">
+<link rel="canonical" href="https://kouta-kun.github.io/posts/roguelike-pt1/" />
+<link crossorigin="anonymous" href="/assets/css/stylesheet.min.c88963fe2d79462000fd0fb1b3737783c32855d340583e4523343f8735c787f0.css" integrity="sha256-yIlj/i15RiAA/Q&#43;xs3N3g8MoVdNAWD5FIzQ/hzXHh/A=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.min.4dcb3c4f38462f66c6b6137227726f5543cb934cca9788f041c087e374491df2.js" integrity="sha256-Tcs8TzhGL2bGthNyJ3JvVUPLk0zKl4jwQcCH43RJHfI="
+    onload="hljs.initHighlightingOnLoad();"></script>
+<link rel="icon" href="https://kouta-kun.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://kouta-kun.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://kouta-kun.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://kouta-kun.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://kouta-kun.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --hljs-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:title" content="Roguelike - Part 1" />
+<meta property="og:description" content="How my map generation is going so far." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://kouta-kun.github.io/posts/roguelike-pt1/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-03-03T04:20:50-03:00" />
+<meta property="article:modified_time" content="2022-03-03T04:20:50-03:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Roguelike - Part 1"/>
+<meta name="twitter:description" content="How my map generation is going so far."/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://kouta-kun.github.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Roguelike - Part 1",
+      "item": "https://kouta-kun.github.io/posts/roguelike-pt1/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Roguelike - Part 1",
+  "name": "Roguelike - Part 1",
+  "description": "How my map generation is going so far.\n",
+  "keywords": [
+    
+  ],
+  "articleBody": "How my map generation is going so far.\nI joined the Roguelike-jam 2022! I also screwed up my sleep-cycle so I’m writing this at about 04:30 UYU Time.\nInitially I was going to just sort of clone the algorithm I made for my previous dungeon-ish game, Abstract Terror Strike, but I wasn’t entirely happy with it. While reading up about map generation (got some fun island making algorithms too but I couldn’t fit that in with the theme), I found this custom building generation algorithm: Real-time Procedural Generation of ‘Pseudo Infinite’ Cities.\nThe basic working of it (please do read it! It’s pretty interesting and does some amazing work for a 2003 paper) is to generate a set of building primitives, calculating the union of them for each floor and removing the last one when building each successive floor. This makes for pretty organic looking buildings, and some fun “dungeons”, to which I had to add some checks to make sure it always remained connected and didn’t overlap. Forcing floors to always be continuous might not be necessary but I didn’t really want the player to deal with backtracking. For an example of how it looks, see this image: The original paper is far better, with less angled buildings but I couldn’t get circle mask generation to work quite right. Texturing I didn’t quite get from the paper either but it does explain how they calculate mapping to a preexisting texture.\nThen, I need to split up each floor into rooms. The way I went about this, although it didn’t really work out as I hoped, is to traverse every available block from top-left on, trying to group up rows of the same size, so that for example a small extrusion from the building would be its’ own room separated from the rest of the building. Didn’t really work out but it’s a nice starting point, see the following picture: Both of these systems can be improved in quite a couple of ways, but I’m happy with this as a starting point. The next couple of challenges are to make connections between rooms (probably just a matter of finding all block pairs where one is in a room and another is in another), staircase positioning and such. The last one was an issue for me on ATS because it tended to sometimes generate a locked door before the chest that had its’ key, which i solved by placing all chests on the left side of the room and locked doors on the right side, but that makes for a pretty shallow challenge and wouldn’t work very well on a not rectangular dungeon.\nThanks for reading! I will continue to write about my progress in this game.\n",
+  "wordCount" : "456",
+  "inLanguage": "en",
+  "datePublished": "2022-03-03T04:20:50-03:00",
+  "dateModified": "2022-03-03T04:20:50-03:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://kouta-kun.github.io/posts/roguelike-pt1/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "kouta's blog",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://kouta-kun.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://kouta-kun.github.io/" accesskey="h" title="kouta&#39;s blog (Alt + H)">kouta&#39;s blog</a>
+            <span class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </span>
+        </div>
+        <ul id="menu">
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title">
+      Roguelike - Part 1
+    </h1>
+    <div class="post-meta"><span title='2022-03-03 04:20:50 -0300 -03'>March 3, 2022</span>
+
+</div>
+  </header> 
+  <div class="post-content"><p>How my map generation is going so far.</p>
+<p>I joined the <a href="https://itch.io/jam/rouguelike-jam">Roguelike-jam 2022</a>! I also screwed up my sleep-cycle so I&rsquo;m writing this at about 04:30 UYU Time.</p>
+<p>Initially I was going to just sort of clone the algorithm I made for my previous
+dungeon-ish game, <a href="https://github.com/kouta-kun/abstract-terror-strike">Abstract Terror Strike</a>, but I wasn&rsquo;t entirely happy with it. While reading up about
+map generation (got some fun island making algorithms too but I couldn&rsquo;t fit that in with the theme), I found this
+custom building generation algorithm: <a href="http://web.archive.org/web/20191231043835/http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.88.7296&amp;rep=rep1&amp;type=pdf">Real-time Procedural Generation of ‘Pseudo Infinite’ Cities</a>.</p>
+<p>The basic working of it (please do read it! It&rsquo;s pretty interesting and does some <em>amazing</em> work for a 2003 paper) is to generate a set of
+building primitives, calculating the union of them for each floor and removing the last one when building each successive floor.
+This makes for pretty organic looking buildings, and some fun &ldquo;dungeons&rdquo;, to which I had to add some checks to make sure
+it always remained connected and didn&rsquo;t overlap. Forcing floors to always be continuous might
+not be necessary but I didn&rsquo;t really want the player to deal with backtracking. For an example of how it looks, see this image:
+<img loading="lazy" src="/generated_building.jpg" alt="Generated building"  title="Generated building"  />
+
+The original paper is far better, with less angled buildings but I couldn&rsquo;t get circle mask generation to work quite right. Texturing I didn&rsquo;t quite get from the paper either but it does explain how they calculate mapping to a preexisting texture.</p>
+<p>Then, I need to split up each floor into rooms. The way I went about this, although it didn&rsquo;t really work out as I hoped,
+is to traverse every available block from top-left on, trying to group up rows of the same size,
+so that for example a small extrusion from the building would be its&rsquo; own room separated from the rest of the
+building. Didn&rsquo;t really work out but it&rsquo;s a nice starting point, see the following picture:
+<img loading="lazy" src="/segmented_rooms.jpg" alt="Segmented rooms"  title="Segmented rooms"  />
+</p>
+<p>Both of these systems can be improved in quite a couple of ways, but I&rsquo;m happy with this as a starting point. The next couple of challenges are to make connections
+between rooms (probably just a matter of finding all block pairs where one is in a room and another is in another), staircase positioning and such. The last one was
+an issue for me on ATS because it tended to sometimes generate a locked door <em>before</em> the chest that had its&rsquo; key, which i solved by placing all chests on the left
+side of the room and locked doors on the right side, but that makes for a pretty shallow challenge and wouldn&rsquo;t work very well on a not rectangular dungeon.</p>
+<p>Thanks for reading! I will continue to write about my progress in this game.</p>
+
+  </div>
+
+  <footer class="post-footer">
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2022 <a href="https://kouta-kun.github.io/">kouta&#39;s blog</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://git.io/hugopapermod" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>
